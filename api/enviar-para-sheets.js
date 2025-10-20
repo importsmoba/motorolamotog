@@ -12,9 +12,11 @@ module.exports = async (req, res) => {
   );
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.status(204).end();
+  return;
   }
+
 
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido' });
