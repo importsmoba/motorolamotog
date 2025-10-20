@@ -3,35 +3,35 @@ const { google } = require('googleapis');
 
 module.exports = async (req, res) => {
   // ✅ CORS simplificado
-res.setHeader('Access-Control-Allow-Origin', '*');
-res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
 
-if (req.method === 'OPTIONS') {
-  return res.status(204).end();
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido' });
   }
 
   try {
-  // ✅ Corrige corpo vindo como string (Vercel não faz parse automático)
-  if (typeof req.body === 'string') {
-    try {
-      req.body = JSON.parse(req.body);
-    } catch (e) {
-      console.error('❌ Erro ao converter body:', e);
-      return res.status(400).json({ erro: 'Body inválido — deve ser JSON' });
+    // ✅ Corrige corpo vindo como string
+    if (typeof req.body === 'string') {
+      try {
+        req.body = JSON.parse(req.body);
+      } catch (e) {
+        console.error('❌ Erro ao converter body:', e);
+        return res.status(400).json({ erro: 'Body inválido — deve ser JSON' });
+      }
     }
-  }
 
-  const { tipo, dados } = req.body;
-  console.log('📩 Corpo recebido:', req.body);
+    const { tipo, dados } = req.body;
+    console.log('📩 Corpo recebido:', req.body);
 
-  if (!tipo || !dados) {
-    return res.status(400).json({ erro: 'Dados incompletos' });
-  }
+    if (!tipo || !dados) {
+      return res.status(400).json({ erro: 'Dados incompletos' });
+    }
 
     // Configurar credenciais do Google Sheets
     const GOOGLE_SHEETS_CREDENTIALS = process.env.GOOGLE_SHEETS_CREDENTIALS;
@@ -39,7 +39,7 @@ if (req.method === 'OPTIONS') {
     const SHEET_NAME = process.env.SHEET_NAME || 'Dados';
 
     if (!GOOGLE_SHEETS_CREDENTIALS || !SPREADSHEET_ID) {
-      console.error('Credenciais do Google Sheets não configuradas');
+      console.error('❌ Credenciais do Google Sheets não configuradas');
       return res.status(500).json({ erro: 'Configuração incompleta' });
     }
 
@@ -54,7 +54,7 @@ if (req.method === 'OPTIONS') {
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Timestamp ISO (para comparação segura)
+    // Timestamp ISO
     const timestamp = new Date();
     const timestampFormatado = timestamp.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
@@ -120,12 +120,11 @@ if (req.method === 'OPTIONS') {
       const clienteAnterior = lastRow[8];
       const horaAnterior = lastRow[0];
 
-      // Converter data anterior (de "pt-BR" para Date)
+      // Converter data/hora anterior corretamente
       const [dataPart, horaPart] = horaAnterior.split(', ');
       const [dia, mes, ano] = dataPart.split('/');
       const [hora, minuto, segundo] = horaPart.split(':');
-      const horaAnteriorConvertida = new Date(ano, mes-1, dia, hora, minuto, segundo);
-
+      const horaAnteriorConvertida = new Date(ano, mes - 1, dia, hora, minuto, segundo);
 
       const diff = Math.abs(timestamp - horaAnteriorConvertida);
 
@@ -145,13 +144,12 @@ if (req.method === 'OPTIONS') {
     }
 
     // ✅ Inserir dados na planilha
+    console.log('📝 Linha a ser enviada:', row);
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_NAME}!A:W`,
       valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [row],
-      },
+      resource: { values: [row] },
     });
 
     return res.status(200).json({ sucesso: true, mensagem: 'Dados enviados para o Google Sheets' });
