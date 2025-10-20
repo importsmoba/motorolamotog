@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     }
 
     // Parse das credenciais
-    const credentials = JSON.parse(GOOGLE_SHEETS_CREDENTIALS);
+    const credentials = JSON.parse(GOOGLE_SHEETS_CREDENTIALS.replace(/\\n/g, '\n'));
 
     // Autenticar com Google Sheets API
     const auth = new google.auth.GoogleAuth({
@@ -110,15 +110,37 @@ module.exports = async (req, res) => {
       return res.status(400).json({ erro: 'Tipo inválido' });
     }
 
-    // Inserir dados na planilha
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:W`, // Colunas A até W (23 colunas)
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [row],
-      },
-    });
+    // Verificar duplicação (última linha idêntica)
+const getLastRow = await sheets.spreadsheets.values.get({
+  spreadsheetId: SPREADSHEET_ID,
+  range: `${SHEET_NAME}!A:W`,
+});
+
+const allRows = getLastRow.data.values || [];
+const lastRow = allRows[allRows.length - 1];
+
+// Detecta duplicação (mesmo tipo, produto, cliente e diferença < 3s)
+const isDuplicate =
+  lastRow &&
+  lastRow[1] === (tipo === 'pix_gerado' ? 'PIX' : 'CARTÃO') &&
+  lastRow[2] === (dados.produto || '') &&
+  lastRow[8] === (dados.cliente || '') &&
+  Math.abs(new Date(timestamp) - new Date(lastRow[0])) < 3000;
+
+if (isDuplicate) {
+  console.log('⚠️ Registro duplicado detectado — ignorado.');
+  return res.status(200).json({ sucesso: true, mensagem: 'Registro duplicado ignorado.' });
+}
+
+// Inserir dados na planilha
+await sheets.spreadsheets.values.append({
+  spreadsheetId: SPREADSHEET_ID,
+  range: `${SHEET_NAME}!A:W`,
+  valueInputOption: 'USER_ENTERED',
+  resource: {
+    values: [row],
+  },
+});
 
     return res.status(200).json({ sucesso: true, mensagem: 'Dados enviados para o Google Sheets' });
   } catch (error) {
