@@ -2,36 +2,36 @@
 const { google } = require('googleapis');
 
 module.exports = async (req, res) => {
-  // Configurar CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+  // ✅ CORS simplificado
+res.setHeader('Access-Control-Allow-Origin', '*');
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', '*');
 
-  // Preflight (CORS)
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-      'Access-Control-Allow-Headers':
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
-    });
-    return res.end();
-  }
+if (req.method === 'OPTIONS') {
+  return res.status(204).end();
+}
 
   if (req.method !== 'POST') {
     return res.status(405).json({ erro: 'Método não permitido' });
   }
 
   try {
-    const { tipo, dados } = req.body;
-
-    if (!tipo || !dados) {
-      return res.status(400).json({ erro: 'Dados incompletos' });
+  // ✅ Corrige corpo vindo como string (Vercel não faz parse automático)
+  if (typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {
+      console.error('❌ Erro ao converter body:', e);
+      return res.status(400).json({ erro: 'Body inválido — deve ser JSON' });
     }
+  }
+
+  const { tipo, dados } = req.body;
+  console.log('📩 Corpo recebido:', req.body);
+
+  if (!tipo || !dados) {
+    return res.status(400).json({ erro: 'Dados incompletos' });
+  }
 
     // Configurar credenciais do Google Sheets
     const GOOGLE_SHEETS_CREDENTIALS = process.env.GOOGLE_SHEETS_CREDENTIALS;
@@ -121,7 +121,11 @@ module.exports = async (req, res) => {
       const horaAnterior = lastRow[0];
 
       // Converter data anterior (de "pt-BR" para Date)
-      const horaAnteriorConvertida = new Date(horaAnterior.split('/').reverse().join('-'));
+      const [dataPart, horaPart] = horaAnterior.split(', ');
+      const [dia, mes, ano] = dataPart.split('/');
+      const [hora, minuto, segundo] = horaPart.split(':');
+      const horaAnteriorConvertida = new Date(ano, mes-1, dia, hora, minuto, segundo);
+
 
       const diff = Math.abs(timestamp - horaAnteriorConvertida);
 
