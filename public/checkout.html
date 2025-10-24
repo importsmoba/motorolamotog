@@ -243,7 +243,7 @@ input.invalid { border-color: #ff4d4d; }
 }
 /* Header branco com logo visível */
 .header {
-    background-color: #ffffff !important; /* fundo branco */
+    background-color: #000000 !important; /* fundo branco */
     color: #000000 !important; /* texto preto */
     border-bottom: 1px solid #ddd; /* linha discreta na base */
 }
@@ -252,10 +252,27 @@ input.invalid { border-color: #ff4d4d; }
 .header .logo {
     color: #000000 !important;
 }
+.top-gif-container {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px; /* espaço entre GIF e o conteúdo abaixo */
+}
+
+.top-gif {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+}
+
 </style>
 
 </head>
 <header class="header">
+    <div class="top-gif-container">
+      <img src="https://www.casasbahia-imagens.com.br/criacao/19-insider/2025/10-out/23/master-header_desk_black.gif" 
+         alt="Banner Promoção" class="top-gif">
+    </div>
+
     <div class="container" style="text-align: center;">
         <a href="index.html">
             <img src="logo.svg" alt="Logo" style="max-width: 250px; height: auto; display: inline-block;">
