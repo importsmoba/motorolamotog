@@ -260,15 +260,25 @@ input.invalid { border-color: #ff4d4d; }
 
 .top-gif {
     width: 100%;
-    height: auto; /* mantém proporção */
-    max-height: 600px; /* limite máximo em telas grandes */
+    height: auto;
+    max-height: 800px; /* limite máximo para telas grandes */
     display: inline-block;
 }
 
-/* Mobile – telas menores que 768px */
+/* Tablets */
 @media (max-width: 768px) {
     .top-gif {
-        max-height: 500px; /* altura maior no tablet */
+        max-height: 600px;
+    }
+}
+
+/* Celulares pequenos */
+@media (max-width: 480px) {
+    .top-gif {
+        max-height: none;       /* remove limite para ficar o maior possível */
+        height: 80vh;           /* ocupa 80% da altura da tela do celular */
+        width: 100%;
+        object-fit: cover;      /* mantém proporção e preenche largura */
     }
 }
 
