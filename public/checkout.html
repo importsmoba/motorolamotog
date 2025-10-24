@@ -255,13 +255,27 @@ input.invalid { border-color: #ff4d4d; }
 .top-gif-container {
     width: 100%;
     text-align: center;
-    margin-bottom: 20px; /* espaço entre GIF e o conteúdo abaixo */
+    margin-bottom: 20px;
 }
 
 .top-gif {
-    max-width: 100%;
+    width: 100%;
     height: auto;
+    max-height: 400px; /* Limita o tamanho máximo em telas grandes */
     display: inline-block;
+}
+
+/* Ajuste para telas pequenas */
+@media (max-width: 768px) {
+    .top-gif {
+        max-height: 250px; /* aumenta visualização proporcional no mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .top-gif {
+        max-height: 200px; /* tamanho ideal para celulares menores */
+    }
 }
 
 </style>
