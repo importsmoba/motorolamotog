@@ -260,19 +260,25 @@ input.invalid { border-color: #ff4d4d; }
 
 .top-gif {
     width: 100%;
-    height: auto;
-    max-height: 400px; /* Limita o tamanho máximo em telas grandes */
+    height: auto; /* mantém proporção */
+    max-height: 600px; /* limite máximo em telas grandes */
     display: inline-block;
 }
 
-/* Ajuste para telas médias (tablets) */
+/* Mobile – telas menores que 768px */
 @media (max-width: 768px) {
     .top-gif {
-        max-height: 500px; /* altura maior para tablet */
-        width: 100%;       /* ocupa toda a largura */
-        object-fit: cover; /* mantém proporção e preenche a largura */
+        max-height: 500px; /* altura maior no tablet */
     }
 }
+
+/* Mobile pequeno – telas menores que 480px */
+@media (max-width: 480px) {
+    .top-gif {
+        max-height: 600px; /* GIF bem maior no celular */
+    }
+}
+
 
 /* Ajuste para telas pequenas (celulares) */
 @media (max-width: 480px) {
