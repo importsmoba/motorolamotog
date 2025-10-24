@@ -265,16 +265,21 @@ input.invalid { border-color: #ff4d4d; }
     display: inline-block;
 }
 
-/* Ajuste para telas pequenas */
+/* Ajuste para telas médias (tablets) */
 @media (max-width: 768px) {
     .top-gif {
-        max-height: 500px; /* aumenta visualização proporcional no mobile */
+        max-height: 500px; /* altura maior para tablet */
+        width: 100%;       /* ocupa toda a largura */
+        object-fit: cover; /* mantém proporção e preenche a largura */
     }
 }
 
+/* Ajuste para telas pequenas (celulares) */
 @media (max-width: 480px) {
     .top-gif {
-        max-height: 200px; /* tamanho ideal para celulares menores */
+        max-height: 350px; /* altura maior no mobile */
+        width: 100%;       
+        object-fit: cover;
     }
 }
 
